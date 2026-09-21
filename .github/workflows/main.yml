@@ -28,14 +28,18 @@ jobs:
         run: |
           unzip -o IDT_Updated_Android_Project.zip -d extracted
 
-      - name: Find project folder
+      - name: Find Gradle project
         run: |
-          find extracted -name gradlew -type f
-
-      - name: Build APK
-        run: |
-          chmod +x extracted/IDT_Updated_Android_Project/gradlew
-          cd extracted/IDT_Updated_Android_Project
+          GRADLEW=$(find extracted -type f -name gradlew | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew not found"
+            find extracted -maxdepth 5 -type f
+            exit 1
+          fi
+          echo "Found Gradle project: $GRADLEW"
+          chmod +x "$GRADLEW"
+          PROJECT_DIR=$(dirname "$GRADLEW")
+          cd "$PROJECT_DIR"
           ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
